@@ -2,17 +2,29 @@
   "name": "habit-tracker",
   "version": "0.1.0",
   "private": true,
+  "description": "Minimal offline habit tracker packaged for desktop via Electron.",
+  "author": {
+    "name": "Habit Tracker Team",
+    "email": "mustafakhann050@gmail.com"
+  },
   "scripts": {
-    "dev": "next dev --turbopack",
-    "build": "next build",
-    "start": "next start",
+    "dev": "concurrently \"next dev --turbopack\" \"wait-on http://localhost:3000 && ELECTRON_START_URL=http://localhost:3000 electron .\"",
+    "build:web": "next build",
+    "icons": "node scripts/build-icons.mjs",
+    "build:linux": "npm run icons && electron-builder --linux deb AppImage rpm",
+    "build:win": "npm run icons && electron-builder --win nsis zip",
+    "build:mac": "npm run icons && electron-builder --mac dmg zip",
+    "build:electron": "npm run icons && electron-builder -mwl",
+    "build": "npm run build:web && npm run build:electron",
+    "start": "electron .",
     "lint": "next lint"
   },
   "dependencies": {
     "next": "15.4.6",
     "react": "19.1.0",
     "react-dom": "19.1.0",
-    "zustand": "^5.0.7"
+    "zustand": "^5.0.7",
+    "serve-handler": "^6.1.5"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3",
@@ -23,6 +35,49 @@
     "eslint": "^9",
     "eslint-config-next": "15.4.6",
     "tailwindcss": "^4",
-    "typescript": "^5"
+    "typescript": "^5",
+    "concurrently": "^9.1.2",
+    "electron": "^31.7.6",
+    "electron-builder": "^24.13.3",
+    "png2icons": "^2.0.0",
+    "sharp": "^0.33.4",
+    "wait-on": "^8.0.0"
+  },
+  "main": "electron/main.js",
+  "build": {
+    "appId": "com.habit.tracker",
+    "productName": "HabitTracker",
+    "publish": "never",
+    "directories": {
+      "buildResources": "build",
+      "output": "dist"
+    },
+    "artifactName": "${productName}-${version}-${os}-${arch}.${ext}",
+    "icon": "build/icon.png",
+    "files": [
+      "out/**",
+      "electron/**",
+      "build/**"
+    ],
+    "asarUnpack": [
+      "out/**"
+    ],
+    "linux": {
+      "target": ["deb", "AppImage", "rpm"],
+      "category": "Utility",
+      "executableName": "habit-tracker",
+      "maintainer": "Habit Tracker Team <mustafakhann050@gmail.com>",
+      "icon": "build/icons"
+    },
+    "mac": {
+      "target": ["dmg", "zip"],
+      "category": "public.app-category.productivity",
+      "icon": "build/icon.icns",
+      "identity": null
+    },
+    "win": {
+      "target": ["nsis", "zip"],
+      "icon": "build/icon.ico"
+    }
   }
 }

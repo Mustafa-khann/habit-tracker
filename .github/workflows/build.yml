@@ -1,0 +1,55 @@
+name: Build installers
+
+on:
+  push:
+    branches: [ main, master ]
+  workflow_dispatch: {}
+
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+        node: [20]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Use Node.js ${{ matrix.node }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node }}
+          cache: 'npm'
+          cache-dependency-path: habit-tracker/package-lock.json
+
+      - name: Install dependencies
+        working-directory: habit-tracker
+        run: npm ci
+
+      - name: Build web
+        working-directory: habit-tracker
+        run: npm run build:web
+
+      - name: Build Linux installers
+        if: startsWith(matrix.os, 'ubuntu')
+        working-directory: habit-tracker
+        run: npm run build:linux
+
+      - name: Build Windows installers
+        if: startsWith(matrix.os, 'windows')
+        working-directory: habit-tracker
+        run: npm run build:win
+
+      - name: Build macOS installers
+        if: startsWith(matrix.os, 'macos')
+        working-directory: habit-tracker
+        run: npm run build:mac
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: installers-${{ matrix.os }}
+          path: habit-tracker/dist/**
+          if-no-files-found: warn

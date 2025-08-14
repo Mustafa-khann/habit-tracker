@@ -1,26 +1,32 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+This is a Next.js + Electron app. You can develop the Next.js UI and the Electron shell concurrently, and build a Debian `.deb` package.
 
 ## Getting Started
 
-First, run the development server:
+First, run the development server with Electron:
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+This launches Next.js at `http://localhost:3000` and opens Electron pointing to it.
 
 You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
 
 This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
 
-## Learn More
+## Build
+
+```bash
+npm run build
+```
+
+This exports the Next.js site to `out/` and then packages an Electron `.deb` in `dist/`.
+
+If you only want the web export:
+
+```bash
+npm run build:web
+```
 
 To learn more about Next.js, take a look at the following resources:
 
@@ -29,8 +35,35 @@ To learn more about Next.js, take a look at the following resources:
 
 You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
 
-## Deploy on Vercel
+## Packaging output
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+- Linux `.deb` packages are written to `dist/`.
+- The Electron app loads the static export from `out/`.
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## Desktop builds
+
+Build Linux (Deb/AppImage/RPM):
+
+```bash
+npm run build:web
+npm run build:linux
+```
+
+Build Windows (NSIS/zip):
+
+```bash
+npm run build:web
+npm run build:win
+```
+
+Build macOS (DMG/zip):
+
+```bash
+npm run build:web
+npm run build:mac
+```
+
+Notes:
+- macOS artifacts require macOS to build. They are unsigned by default (`mac.identity: null`).
+- Windows artifacts can be built on Windows runners. Building Windows on Linux requires Wine; use CI instead.
+- All artifacts are written to `dist/`.
