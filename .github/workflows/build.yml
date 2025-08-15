@@ -2,7 +2,8 @@ name: Build installers
 
 on:
   push:
-    branches: [ main, master ]
+    tags:
+      - 'v*.*.*'
   workflow_dispatch: {}
 
 jobs:
@@ -47,9 +48,71 @@ jobs:
         working-directory: habit-tracker
         run: npm run build:mac
 
-      - name: Upload artifacts
-        uses: actions/upload-artifact@v4
+      - name: Create release
+        if: startsWith(github.ref, 'refs/tags/')
+        uses: softprops/action-gh-release@v2
         with:
-          name: installers-${{ matrix.os }}
-          path: habit-tracker/dist/**
-          if-no-files-found: warn
+          draft: false
+          prerelease: false
+          files: |
+            habit-tracker/dist/**
+
+      - name: Upload stable-named assets
+        if: startsWith(github.ref, 'refs/tags/')
+        shell: bash
+        working-directory: habit-tracker/dist
+        run: |
+          set -euo pipefail
+          echo "Stable naming on $RUNNER_OS"
+          shopt -s nullglob
+          case "$RUNNER_OS" in
+            Linux)
+              for f in HabitTracker-*-linux-x86_64.AppImage HabitTracker-*-amd64.deb HabitTracker-*-x86_64.rpm; do
+                [ -f "$f" ] || continue
+                case "$f" in
+                  *.AppImage) cp -f "$f" HabitTracker-linux-amd64.AppImage;;
+                  *.deb) cp -f "$f" HabitTracker-linux-amd64.deb;;
+                  *.rpm) cp -f "$f" HabitTracker-linux-amd64.rpm;;
+                esac
+              done
+              ;;
+            Windows)
+              for f in HabitTracker-*-win-x64.exe; do
+                [ -f "$f" ] || continue
+                cp -f "$f" HabitTracker-win-x64.exe
+              done
+              ;;
+            macOS)
+              for f in HabitTracker-*-mac-arm64.dmg HabitTracker-*-arm64.dmg; do
+                [ -f "$f" ] || continue
+                cp -f "$f" HabitTracker-mac-arm64.dmg
+              done
+              for f in HabitTracker-*-mac-x64.dmg HabitTracker-*-x64.dmg; do
+                [ -f "$f" ] || continue
+                cp -f "$f" HabitTracker-mac-x64.dmg
+              done
+              ;;
+          esac
+          ls -al
+
+      - name: Attach stable assets to release (linux)
+        if: startsWith(github.ref, 'refs/tags/') && startsWith(matrix.os, 'ubuntu')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            habit-tracker/dist/HabitTracker-linux-amd64.*
+
+      - name: Attach stable assets to release (windows)
+        if: startsWith(github.ref, 'refs/tags/') && startsWith(matrix.os, 'windows')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            habit-tracker/dist/HabitTracker-win-x64.exe
+
+      - name: Attach stable assets to release (mac)
+        if: startsWith(github.ref, 'refs/tags/') && startsWith(matrix.os, 'macos')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            habit-tracker/dist/HabitTracker-mac-arm64.dmg
+            habit-tracker/dist/HabitTracker-mac-x64.dmg

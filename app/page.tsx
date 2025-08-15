@@ -41,6 +41,14 @@ export default function Home() {
           <div>
             <h1 className="text-3xl font-semibold tracking-tight">Habit Tracker</h1>
             <p className="text-sm text-gray-400">Local, private, fast.</p>
+            <div className="mt-2">
+              <a
+                href="/download"
+                className="inline-flex items-center rounded-md border border-gray-700 bg-gray-900/60 px-3 py-1 text-xs text-gray-200 backdrop-blur hover:bg-gray-800 supports-[backdrop-filter]:bg-gray-900/40"
+              >
+                Download desktop app
+              </a>
+            </div>
           </div>
           <div className="flex items-center gap-2 rounded-full border border-gray-700 bg-gray-900/60 p-1 backdrop-blur supports-[backdrop-filter]:bg-gray-900/40">
             {[7, 14, 21, 28].map((d) => (
